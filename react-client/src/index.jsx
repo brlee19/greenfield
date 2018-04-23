@@ -68,30 +68,3 @@ class App extends React.Component {
 
 
 ReactDOM.render(<App/>, document.getElementById('app'));
-
- /* <Router>
-          <div>
-          <ul>
-              <li>
-                <Link to='/'>LOGIN</Link>
-              </li>
-
-          </ul>
-
-            <h1>App Component w/ Routes</h1>
-            <Route path="/" component{Login}/>
-            <Route path="/search" component{Search} />
-            <Route path="/favorites" component{Favorites} />
-            <Route path="/preferences" component{Preferences} />
-          </div>
-      </Router> 
-
-    ReactDOM.render(
-       <BrowserRouter>
-       <App/> 
-       </BrowserRouter>
-       ,
-     document.getElementById('app'));
-
-
- */

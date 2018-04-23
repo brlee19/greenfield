@@ -8,8 +8,12 @@ const connection = mysql.createConnection({
 
 connection.connect();
 
+//PLEASE READ SCHEMA FIRST!
 
 const checkUser = (user, cb) => {
+  //search for user in DB
+    //if not found, create new user
+    //else, retrieve all user's saved data
   connection.query(`SELECT * FROM users WHERE username = ?`, user.username, (err, results) => {
     if (err) {
       return console.error(`Error when trying to query the database to check for dupes when creating a new user: ${err}`);
@@ -27,41 +31,44 @@ const checkUser = (user, cb) => {
 
       let userId = results[0].id;
 
+      //get all saved destinations that belong to a user
       connection.query(`SELECT * FROM saved_destinations WHERE id_users= ${userId}`, (err, destinations) => {
         if (err) { return console.error(`Error in selecting saved destinations: ${err}`); }
 
         console.log('results from querying saved destinations for matches with userId', JSON.stringify(destinations));
-
+        
+        //return an array of destination IDs to use in query (in join table) for user's favorite places
         let destinationIDs = destinations.map((dest) => {
           return dest.id;
         });
 
         console.log(`destination IDs: ${destinationIDs}`);
 
-
+        
         const getAllFavorites = (destinationIDs, callback) => {
-          let faves = [];
+          let faves = []; //
           Promise.all(destinationIDs.map((eachDest, topLevelMapIdx) => {
             return new Promise((resolve, reject) => {
+              //below query finds matching places for a given destination (may return multiple rows)
               connection.query(`SELECT google_id_saved_places, travel_time, distance FROM destination_to_place WHERE id_saved_destination= ${eachDest}; `, (err, matches) => {
                 if (err) { return console.error(`Error selecting placeIds with the from join table: ${err}`); }
 
                 // console.log(`Results from retrieving matching placeIds from join table: ${JSON.stringify(matches)}`);
 
                 let googlePlaceIDs = matches.map((match) => {
-                  return match.google_id_saved_places;
+                  return match.google_id_saved_places; //pull out google_place_ids from the matching row(s) in join table query results
                 });
 
                 // console.log(`mapped google place ids: ${googlePlaceIDs}, typeof: ${Array.isArray(googlePlaceIDs)}`);
 
                 let bulkPlaceQuery = googlePlaceIDs.map((google_id) => {
-                  return `SELECT * FROM saved_places WHERE google_id= '${google_id}'; `;
+                  return `SELECT * FROM saved_places WHERE google_id= '${google_id}'; `; //create bulk query string by mapping over google_place_ids
                 }).join('');
 
                 // console.log(`BULK QUERY from mapped google_ids: ${bulkPlaceQuery}`);
 
                 let travelTimeInfo = matches.map((match) => {
-                  return [match.destination, match.travel_time];
+                  return [match.destination, match.travel_time]; //format the travel/distance relationship between a given destination and each of its saved places
                 });
 
 
@@ -73,16 +80,16 @@ const checkUser = (user, cb) => {
 
                     console.log(`Success! All matching place objects for ${eachDest}: ${JSON.stringify(places)}`);
 
-                    let { dest_address, create_time, dest_lat, dest_long, rating } = destinations[topLevelMapIdx];
+                    let { dest_address, create_time, dest_lat, dest_long, rating } = destinations[topLevelMapIdx]; //destructured fields from a given saved destination
 
 
-                    let fave = {
+                    let fave = { //package all info corresponding to a saved destination (aka fave)
                       address: dest_address,
                       createdAd: create_time,
                       lat: dest_lat,
                       long: dest_long,
                       rating: rating,
-                      places: places.map((place, idx) => {
+                      places: places.map((place, idx) => { //results from the previous bulk query
                         if (Array.isArray(place)) {
                           place = place[0];
                         }
@@ -116,7 +123,7 @@ const checkUser = (user, cb) => {
         getAllFavorites(destinationIDs, (savedLocations) => {
 
           let userData = {
-            userData: results,
+            userData: results, //results is from first query, is a user record (one row from user table)
             savedLocations: savedLocations
           };
 
@@ -187,14 +194,16 @@ const saveDestination = (destination, places, cb) => {
     } 
       console.log('result from store to saved_places and saved_destinations', results);
       connection.query(`SELECT id FROM saved_destinations WHERE dest_address= '${destination.address}' AND create_time= '${destination.create_time.toMysqlFormat()}'`, (err, result) => {
+        //using create time in query so that a destination is unique to a user
         if (err) {return console.error(`error in selecting ID for destination join: ${err}`);}
-        let placeIDs = bulkJoinPlaceIds(places);
+        let placeIDs = bulkJoinPlaceIds(places); //create array of placeIDs for sql bulk query
         let bulkJoinFKIDs = [];
         
         console.log('result from select ID from desintation table query: ', result[0].id);
         
         places.forEach((place, idx) => {
           bulkJoinFKIDs.push([result[0].id, placeIDs[idx], places[idx].distance, places[idx].travel_time]);
+          //result[0].id is saved destination id, placeIDs[idx] is place id index; rest are props of places object being formatted into an array for bulk insert in join table
         })
 
         console.log('mapped out bulkJoin IDs', bulkJoinFKIDs);
@@ -212,7 +221,7 @@ const saveDestination = (destination, places, cb) => {
   // })
 }
 
-const placesInsertionQuery = (places) => {
+const placesInsertionQuery = (places) => { //helper function for save destination
 
   const bulkInsertParams = places.reduce((formattedArr, place) => {
     let row = [];

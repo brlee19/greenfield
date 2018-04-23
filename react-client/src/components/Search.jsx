@@ -127,8 +127,8 @@ class Search extends React.Component {
 			newPrefs: this.props.location.prefs,
 			savedPrefs: this.props.location.savedPrefs ? this.props.location.savedPrefs.userData : undefined
 		}
-		console.log('new prefs are', params.newPrefs)
-		console.log('savedprefs are', params.savedPrefs)
+		// console.log('new prefs are', params.newPrefs)
+		// console.log('savedprefs are', params.savedPrefs)
 
 		axios.post('/places', {params: params})
 		.then(({data}) => {

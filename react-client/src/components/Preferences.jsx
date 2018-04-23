@@ -118,9 +118,3 @@ class Preferences extends React.Component{
 }
 
 export default withRouter(Preferences);
-
-// App
-	//Login
-	// Preferences
-	 // child of preferences
-	// other components
