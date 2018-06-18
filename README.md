@@ -21,14 +21,5 @@ Travelling is fun. But also stressful. With TravelHero, you can find home home a
 ##### organization
 
 * helpers/google.js contains Google API functions
-
 * helpers/dbHelpers.js interacts with the mySQL database
-
 * helpers/utils.js converts data that the React frontend sends to the server to the format that the server uses to make requests to Google. Files that facilitate communication between different parts of the app can go here.
-
-##### opportunities to improve the project
-
-* improve signup page and add user authentication
-* make a call to Google Maps API to plot search results on map
-* finish any remaining functionality to render user favorite places
-* implement Google OAuth to save favorite places on user's Google Maps
