@@ -11,10 +11,6 @@ app.use(bodyParser.json());
 app.use(express.static(__dirname + '/../react-client/dist'));
 
 app.post('/save', (req, res) => {
-  console.log('trying to save', req.body.params.place);
-  console.log('user is', req.body.params.username);
-  console.log('dest is', req.body.params.address)
-  console.log('create time is', new Date(Date.parse(req.body.params.create_time)), ' typeof: ', typeof req.body.params.create_time);
 
   let destination = {
     "username": req.body.params.username,
@@ -23,33 +19,23 @@ app.post('/save', (req, res) => {
   }
 
   saveDestination(destination, [req.body.params.place], (err, results) => {
-    console.log('in the saveDestination callback');
     if (err) {
       console.log('err is', err);
-      res.send('boo');
+      res.send(err);
     }
-    console.log('results are', results);
     res.send(results);
   });
 
-  //SAVE PLACE INTO DB
-  // res.send('server is trying to save');
-})
+});
 
 app.post('/places', (req, res) => {
   const userQuery = req.body.params;
-
-  //format query differently based on whether it came from user or from DB
   const formattedQuery = userQuery.newPrefs ? utils.mapReactObj(userQuery.newPrefs) : utils.mapReactObj(userQuery.savedPrefs);
-
-  // console.log('get userQuery from front', userQuery);
-  // console.log('DEBUGGING FORMAT OF PREFS', formattedQuery);
   google.convertAddressToLatLon(userQuery.address)
-    .then((coords) => { // use lat/lng to chain the next API call
-      return google.getPlaces(coords, formattedQuery); //have to map object into array
+    .then((coords) => {
+      return google.getPlaces(coords, formattedQuery);
     })
     .then((places) => {
-      console.log('DEBUGGING: places inside index.js is', JSON.stringify(places));
       if (places.length) {
         let flattened = [];
         let formattedPlaces = places.map((placeCat) => {
@@ -75,38 +61,22 @@ app.post('/places', (req, res) => {
 
             });
           }
-          console.log('flattened?', flattened[0]);
           return;
         });
-        console.log('correctly flattening api results?', JSON.stringify(flattened[0]));
         res.send(JSON.stringify(flattened));
       }
-      else res.send('No results, please try again'); //no results so need to try again
+      else res.send('No results, please try again');
     })
-    .catch((err) => { //send error code and message asking user to try again
+    .catch((err) => {
       console.log('err searching:', err);
       res.status(500).send(err);
     })
 });
 
-//TO FILL IN
-
-app.get('/', function (req, res) {
-  console.log(req)
-  res.send('received username')
-});
-
 app.post('/login', (req, res) => {
-  console.log('user trying to login is', req.body.userObj.username);
-  //req.body.user is the username
-  //check DB for user
-    //if user not found, send to signup page?
-    //if user found and has no prefs, send back blank array so React sends user to prefs
-    //if user found and has prefs, send back prefs
   const prefs = [
     {type: 'bank', query: 'chase'},
     {type: 'supermarket'},
-    // {type: 'restaurant', query:'coffee'},
     {type: 'gym', query: 'equinox'}
   ];
 
@@ -128,9 +98,6 @@ app.post('/login', (req, res) => {
       };
 
       results.userData = formattedPrefs;
-
-      console.log('results userdata in checkuser /login route:', JSON.stringify(results.userData));
-
       res.send(JSON.stringify(results));
       return; 
     }
@@ -142,10 +109,6 @@ app.post('/login', (req, res) => {
 })
 
 app.post('/preferences', function (req, res) {
-  // console.log(req)
-  // include controller for database query 
-  // res.send('recieved preferences')
-  console.log(req.body);
   let {
     bank, 
     supermarket,
@@ -175,43 +138,20 @@ app.post('/preferences', function (req, res) {
     hair_care: hair_care,
     convenience_store: convenience_store,
     public_transit: transit_station
-  } 
-  
-  // req.body.params.preferences 
-  //     { bank: 'Chase',
-  //       supermarket: 'any',
-  //       meal_takeaway: '',
-  //       cafe: '',
-  //       gym: '',
-  //       liquor_store: true,
-  //       convenience_store: false,
-  //       laundry: false,
-  //       hair_care: false,
-  //       transit_station: false },
-  //    username: 'br' } }
-  //save to database
-  console.log(`username is ${username} and prefs are ${userPrefs}`)
-
+  } ;
   savePrefs(userPrefs, (err, prefs) => {
     res.send(prefs);
   })
 });
 
-//create test users
 app.get(`/tstuser`, (req, res) => {
   checkUser({username: `brian`, password: `pw`}, (err, data) => {
     if (err) {return console.error(`error when creating user ${err}`);}
-    res.send(`ROMA VICTA, data:${JSON.stringify(data)}`);
+    res.send(JSON.stringify(data));
   });
-})
+});
 
-
-//test the db and helper functions
 app.get(`/testdb`, (req, res) => {
-  console.log(`incoming get request recieved at "/testdb"`);
-
-  //should be a post and user = req.body.username
-
   const testPlaces = [
     {
     "type": "bank",
@@ -250,13 +190,11 @@ app.get(`/testdb`, (req, res) => {
   };
 
   saveDestination(testDestination, testPlaces, (err, results) => {
-    console.log('in the saveDestination callback');
     if (err) {
       console.log('err is', err);
-      res.end('boo');
+      res.end(err);
     } 
-      console.log('results are', results);
-      res.end('ROMA FUCKING VICTA!');
+      res.end(results);
   });
 })
 

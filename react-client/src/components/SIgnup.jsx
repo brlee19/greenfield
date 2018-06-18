@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import {withRouter} from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
 import MaterialButton from './MaterialButton.jsx';
 import FlatButton from 'material-ui/FlatButton';
 import RaisedButton from 'material-ui/RaisedButton';

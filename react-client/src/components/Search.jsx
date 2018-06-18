@@ -1,24 +1,15 @@
 import React from 'react';
 import axios from 'axios';
-import {Card, CardActions, CardHeader, CardMedia, CardTitle, CardText} from 'material-ui/Card';
-import FlatButton from 'material-ui/FlatButton';
-import AppBar from 'material-ui/AppBar';
-import RaisedButton from 'material-ui/RaisedButton';
-import TextField from 'material-ui/TextField';
-import IconButton from 'material-ui/IconButton';
+
+import { Card, CardActions, CardHeader, CardMedia, CardTitle, CardText } from 'material-ui/Card';
+import { FlatButton, AppBar, RaisedButton, TextField, IconButton, Paper, IconMenu, FontIcon } from 'material-ui';
+import { Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle } from 'material-ui/Toolbar';
 import ActionGrade from 'material-ui/svg-icons/action/grade';
-import {cyan500, grey300, teal500, teal900} from 'material-ui/styles/colors';
 import SvgIcon from 'material-ui/SvgIcon';
-import Paper from 'material-ui/Paper';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
-import IconMenu from 'material-ui/IconMenu';
-import FontIcon from 'material-ui/FontIcon';
-import NavigationExpandMoreIcon from 'material-ui/svg-icons/navigation/expand-more';
-import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 import SearchIcon from 'material-ui/svg-icons/action/search';
-
-
-// import MaterialButton from './MaterialButton';
+import NavigationExpandMoreIcon from 'material-ui/svg-icons/navigation/expand-more';
+import { cyan500, grey300, teal500, teal900 } from 'material-ui/styles/colors';
 
 class IconLogoInline extends React.Component{
 	render() {
@@ -114,7 +105,6 @@ class Search extends React.Component {
 ],
 			swapFaves: false
 		}
-		//this.props.location.prefs is the prefs object
 		this.fetchClosestPlaces = this.fetchClosestPlaces.bind(this)
 		this.handleAddressState = this.handleAddressState.bind(this)
 		this.saveFavorite = this.saveFavorite.bind(this)
@@ -127,8 +117,6 @@ class Search extends React.Component {
 			newPrefs: this.props.location.prefs,
 			savedPrefs: this.props.location.savedPrefs ? this.props.location.savedPrefs.userData : undefined
 		}
-		// console.log('new prefs are', params.newPrefs)
-		// console.log('savedprefs are', params.savedPrefs)
 
 		axios.post('/places', {params: params})
 		.then(({data}) => {
@@ -154,14 +142,6 @@ class Search extends React.Component {
 		};
 		axios.post('/save', {params: params})
 			.then((resp) => {
-					
-				/*let fav = JSON.parse(resp.config.data)
-				let newfaveState = this.state.favorites.slice();
-				newfaveState.push(fav.params)
-
-				this.setState({
-					favorites: newfaveState
-				});*/
 		})
 			.catch((err) => console.log('err trying to save fave is', err))
 	}

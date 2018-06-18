@@ -1,15 +1,12 @@
 import React from 'react';
 import axios from 'axios';
-import {withRouter} from 'react-router-dom';
-import TextField from 'material-ui/TextField';
-import AppBar from 'material-ui/AppBar';
-import Checkbox from 'material-ui/Checkbox';
-import RaisedButton from 'material-ui/RaisedButton';
+import { withRouter } from 'react-router-dom';
+
+import { TextField, AppBar, Checkbox, RaisedButton } from 'material-ui/TextField';
 
 class Preferences extends React.Component{
 	constructor(props){
 		super(props)
-		//this.props.location.username is the username
 		this.state = {
         bank: '',
         supermarket: '',
@@ -28,7 +25,6 @@ class Preferences extends React.Component{
 
 	handlePreferenceState(event) {
 		const target = event.target;
-		console.log('target is', target.type)
 		const value = target.type === 'checkbox' ? target.checked : target.value
 		const name = target.name;
 		this.setState({
@@ -43,7 +39,6 @@ class Preferences extends React.Component{
 		}
 		axios.post('/preferences', {params: userPrefs})
 		.then((response) => {
-			console.log('preferences sent!')
 			this.props.history.push({
 				pathname: '/search',
 				prefs: this.state,
