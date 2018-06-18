@@ -10,146 +10,56 @@ connection.connect();
 
 //PLEASE READ SCHEMA FIRST!
 
-const checkUser = (user, cb) => {
-  //search for user in DB
-    //if not found, create new user
-    //else, retrieve all user's saved data
-  connection.query(`SELECT * FROM users WHERE username = ?`, user.username, (err, results) => {
-    if (err) {
-      return console.error(`Error when trying to query the database to check for dupes when creating a new user: ${err}`);
-    }
-
-    console.log(`Hitting the DB! User with username ${user.username} currently ${results ? `does exist, retrieving faves` : `doesn't exist. Hang on! Issuing redirect`}; raw results: ${JSON.stringify(results)}`);   
-    
-    if (results.length === 0) {
-      console.log('creating user');
-      createUser(user, cb);
-      
-    }
-    else {
-      console.log('checking for faves!');
-
-      let userId = results[0].id;
-
-      //get all saved destinations that belong to a user
-      connection.query(`SELECT * FROM saved_destinations WHERE id_users= ${userId}`, (err, destinations) => {
-        if (err) { return console.error(`Error in selecting saved destinations: ${err}`); }
-
-        console.log('results from querying saved destinations for matches with userId', JSON.stringify(destinations));
-        
-        //return an array of destination IDs to use in query (in join table) for user's favorite places
-        let destinationIDs = destinations.map((dest) => {
-          return dest.id;
-        });
-
-        console.log(`destination IDs: ${destinationIDs}`);
-
-        
-        const getAllFavorites = (destinationIDs, callback) => {
-          let faves = []; //
-          Promise.all(destinationIDs.map((eachDest, topLevelMapIdx) => {
-            return new Promise((resolve, reject) => {
-              //below query finds matching places for a given destination (may return multiple rows)
-              connection.query(`SELECT google_id_saved_places, travel_time, distance FROM destination_to_place WHERE id_saved_destination= ${eachDest}; `, (err, matches) => {
-                if (err) { return console.error(`Error selecting placeIds with the from join table: ${err}`); }
-
-                // console.log(`Results from retrieving matching placeIds from join table: ${JSON.stringify(matches)}`);
-
-                let googlePlaceIDs = matches.map((match) => {
-                  return match.google_id_saved_places; //pull out google_place_ids from the matching row(s) in join table query results
-                });
-
-                // console.log(`mapped google place ids: ${googlePlaceIDs}, typeof: ${Array.isArray(googlePlaceIDs)}`);
-
-                let bulkPlaceQuery = googlePlaceIDs.map((google_id) => {
-                  return `SELECT * FROM saved_places WHERE google_id= '${google_id}'; `; //create bulk query string by mapping over google_place_ids
-                }).join('');
-
-                // console.log(`BULK QUERY from mapped google_ids: ${bulkPlaceQuery}`);
-
-                let travelTimeInfo = matches.map((match) => {
-                  return [match.destination, match.travel_time]; //format the travel/distance relationship between a given destination and each of its saved places
-                });
-
-
-                resolve(new Promise((resolve, reject) => {
-                  console.log('bet you this runs when we thing it should')
-
-                  connection.query(bulkPlaceQuery, (err, places) => {
-                    if (err) { return console.error(`Error selecting places with the filtered google_id from saved_places: ${err}`); }
-
-                    console.log(`Success! All matching place objects for ${eachDest}: ${JSON.stringify(places)}`);
-
-                    let { dest_address, create_time, dest_lat, dest_long, rating } = destinations[topLevelMapIdx]; //destructured fields from a given saved destination
-
-
-                    let fave = { //package all info corresponding to a saved destination (aka fave)
-                      address: dest_address,
-                      createdAd: create_time,
-                      lat: dest_lat,
-                      long: dest_long,
-                      rating: rating,
-                      places: places.map((place, idx) => { //results from the previous bulk query
-                        if (Array.isArray(place)) {
-                          place = place[0];
-                        }
-                        place['travel_time'] = travelTimeInfo[idx][1];
-                        place['distance'] = travelTimeInfo[idx][0];
-                        return place;
-                      })
-                    };
-                    // console.log('what are pushing to fave', fave)
-
-                    resolve(fave);
-
-                    // console.log('faves on each map iteration', faves
-
-                  });
-
-
-                }))
-              });
-
-                }); 
-              
-            })).then((vals) => {
-              console.log('is faves anything?', vals)
-              callback(vals)
-            })
-          
-          
-        }
-
-        getAllFavorites(destinationIDs, (savedLocations) => {
-
-          let userData = {
-            userData: results, //results is from first query, is a user record (one row from user table)
-            savedLocations: savedLocations
-          };
-
-          // console.log('results correctly composed FINALLY', results);
-          cb(err, userData);
-
-        });
-
-      });
-
-
-    }
+const dbQuery = (queryStr, args) => {
+  return new Promise((resolve, reject) => {
+    connection.query(queryStr, args, (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    })
   });
-}
+};
 
+const createUser = async (user) => {
+  //need error handling here too? or just in the checkUser fn that calls it?
+  //this really shouldn't throw any errors unless the db is down
+  //this puts null for every field besides user and pw...which seems fine?
+  return await dbQuery('insert into users set ?', user);
+};
 
-const createUser = (user, cb) => {
-  connection.query(`INSERT INTO users SET ?`, user, (err, results) => {
-    if (err) {return console.error(`error creating new user: ${err}`);}
-    
-    console.log(`success! new user ${user.username} created!`)
-    cb(err, results);
-  });
-}
+const checkUser = async (user) => {
+  try {
+    const userLookup = await dbQuery(`SELECT * FROM users WHERE username = ?`, user.username);
+    const userDoesExist = userLookup.length;
+    userDoesExist ? await getUserSavedData(userLookup[0].id) : await createUser(user);
+    console.log('done creating user or retrieving user data')
+  } catch(e) {
+    console.error('error trying to check or create user', e)
+  }
+};
 
+const getUserSavedData = async (userId) => {
+  const savedDestinations = await getUserDestinations(userId);
+  //do something with savedDestinations data
+  const destIds = savedDestinations.map(row => row.id);
+  const savedPlaces = await getUserPlaces(destIds);
+  console.log('saved places are', savedPlaces);
+};
 
+const getUserDestinations = async (userId) => {
+  return await dbQuery('select * from saved_destinations where id_users = ?', userId);
+};
+
+const getUserPlaces = async (destinationIds) => {
+  const queryStr = `
+    select *
+    from saved_places as p
+    inner join destination_to_place as d2p
+    on p.google_id = d2p.google_id_saved_places
+    where d2p.id_saved_destination in ('${destinationIds.join()}')
+  `;
+  return await dbQuery(queryStr);
+};
+        
 const savePrefs = (prefs, cb) => {
   console.log(`prefs obj in savePrefs ${JSON.stringify(prefs)}`);
   let prefQuery = `UPDATE users ?`;
