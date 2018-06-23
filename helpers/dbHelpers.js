@@ -8,8 +8,6 @@ const connection = mysql.createConnection({
 
 connection.connect();
 
-//PLEASE READ SCHEMA FIRST!
-
 const dbQuery = (queryStr, args) => {
   return new Promise((resolve, reject) => {
     connection.query(queryStr, args, (err, rows) => {
@@ -20,17 +18,22 @@ const dbQuery = (queryStr, args) => {
 };
 
 const createUser = async (user) => {
-  //need error handling here too? or just in the checkUser fn that calls it?
-  //this really shouldn't throw any errors unless the db is down
-  //this puts null for every field besides user and pw...which seems fine?
   return await dbQuery('insert into users set ?', user);
 };
 
-const checkUser = async (user) => {
+const getPrefs = async (user) => {
   try {
     const userLookup = await dbQuery(`SELECT * FROM users WHERE username = ?`, user.username);
     const userDoesExist = userLookup.length;
-    userDoesExist ? await getUserSavedData(userLookup[0].id) : await createUser(user);
+    if (userDoesExist) {
+      return {
+        userData: userLookup[0], // make sure no dupe usernames allowed
+        places: await getUserSavedData(userLookup[0].id)
+      };
+    } else {
+      await createUser(user);
+      return [];
+    };
     console.log('done creating user or retrieving user data')
   } catch(e) {
     console.error('error trying to check or create user', e)
@@ -39,9 +42,9 @@ const checkUser = async (user) => {
 
 const getUserSavedData = async (userId) => {
   const savedDestinations = await getUserDestinations(userId);
-  //do something with savedDestinations data
   const destIds = savedDestinations.map(row => row.id);
   const savedPlaces = await getUserPlaces(destIds);
+  console.log('saved destinations are', savedDestinations)
   console.log('saved places are', savedPlaces);
 };
 
@@ -164,5 +167,5 @@ const bulkJoinPlaceIds = (places) => {
 
 module.exports.createUser = createUser;
 module.exports.saveDestination = saveDestination;
-module.exports.checkUser = checkUser;
+module.exports.getPrefs = getPrefs;
 module.exports.savePrefs = savePrefs;

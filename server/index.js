@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const google = require('../helpers/google.js');
-const { createUser, saveDestination, checkUser, savePrefs } = require(`../helpers/dbHelpers.js`);
+const { getPrefs, saveDestination, checkUser, savePrefs } = require(`../helpers/dbHelpers.js`);
 const port = 3000;
 const utils = require('../helpers/utils.js');
 let app = express();
@@ -96,25 +96,27 @@ app.get('/', function (req, res) {
   res.send('received username')
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
   console.log('user trying to login is', req.body.userObj.username);
-  //req.body.user is the username
   //check DB for user
-    //if user not found, send to signup page?
+    //if user not found, send to signup page
     //if user found and has no prefs, send back blank array so React sends user to prefs
     //if user found and has prefs, send back prefs
-  const prefs = [
-    {type: 'bank', query: 'chase'},
-    {type: 'supermarket'},
-    // {type: 'restaurant', query:'coffee'},
-    {type: 'gym', query: 'equinox'}
-  ];
+  // const prefs = [
+  //   {type: 'bank', query: 'chase'},
+  //   {type: 'supermarket'},
+  //   // {type: 'restaurant', query:'coffee'},
+  //   {type: 'gym', query: 'equinox'}
+  // ];
+  try {
+    const userPrefs = await getPrefs(req.body.userObj);
+    console.log('userPrefs are', userPrefs)
+    if (userPrefs && userPrefs.userData) {
+      //need to sync these names across schema and API
+      const {bank, grocery_store, coffee_shop, gym_membership, laundromat,
+        liquor_store, hair_care, restaurant, convenience_store, public_transit} = userPrefs.userData;
 
-  checkUser(req.body.userObj, (err, results) => {
-    if (results && results.userData) {
-      let {bank, grocery_store, coffee_shop, gym_membership, laundromat, liquor_store, hair_care, restaurant, convenience_store, public_transit} = results.userData[0];
-
-      let formattedPrefs = {
+      const formattedPrefs = {
         "bank": bank,
         "supermarket": grocery_store,
         "meal_takeaway": restaurant,
@@ -127,17 +129,17 @@ app.post('/login', (req, res) => {
         "transit_station": public_transit
       };
 
-      results.userData = formattedPrefs;
-
-      console.log('results userdata in checkuser /login route:', JSON.stringify(results.userData));
-
-      res.send(JSON.stringify(results));
-      return; 
+      //can avoid this mutation too once names are synced...should match google API
+      userPrefs.userData = formattedPrefs;
+      console.log('results userdata in checkuser /login route:', JSON.stringify(userPrefs.userData));
+      res.send(JSON.stringify(userPrefs))
+    } else {
+      res.send([]);
     }
-    const blank = [];
-    res.send(blank);
-
-  });  
+  } catch(e) {
+    console.error('error trying to retrieve user prefs', e);
+    res.status(500).send('Error trying to retrieve user prefs');
+  }
 
 })
 

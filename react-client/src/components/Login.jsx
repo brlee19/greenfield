@@ -33,28 +33,29 @@ class Login extends React.Component{
     // console.log('function reached')
   	let userObj = {"username": this.state.username, "password": "pwd"}
 		axios.post('/login', {"userObj": userObj})
-  	.then((response) => {
-			console.log('username sent!')
-			console.log('test prefs are', response.data);
-			if (response.data.length === 0) {
-				this.props.history.push({
-					pathname: '/preferences',
-					username: this.state.username
-				});
-			} else {
-				// console.log('DEBUGGING: savedPrefs are', response.data);
-				this.props.history.push({
-					pathname: '/search',
-					savedPrefs: response.data,
-					username: this.state.username
-				}); //send with response.data (prefs) as props
-			}
-      
-    })
-  	.catch((err) => {
-			console.log('error logging in')
-			this.props.history.push('/search') // change to signup
-		})
+			.then((response) => {
+				console.log('response is', response)
+				console.log('username sent!')
+				console.log('test prefs are', response.data);
+				if (response.data.length === 0) {
+					this.props.history.push({
+						pathname: '/preferences',
+						username: this.state.username
+					});
+				} else {
+					// console.log('DEBUGGING: savedPrefs are', response.data);
+					this.props.history.push({
+						pathname: '/search',
+						savedPrefs: response.data,
+						username: this.state.username
+					}); //send with response.data (prefs) as props
+				}
+				
+			})
+			.catch((err) => {
+				console.log('error logging in')
+				this.props.history.push('/search') // change to signup
+			})
   }
 
   // handle change state for username
