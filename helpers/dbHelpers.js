@@ -58,6 +58,10 @@ const getPrefs = async (user) => {
   }
 };
 
+// const savePrefs = async (prefs) => {
+
+// }
+
 const savePrefs = (prefs, cb) => {
   console.log(`prefs obj in savePrefs ${JSON.stringify(prefs)}`);
   let prefQuery = `UPDATE users ?`;

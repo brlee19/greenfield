@@ -1,6 +1,8 @@
 import React from 'react';
 import axios from 'axios';
-import {Card, CardActions, CardHeader, CardMedia, CardTitle, CardText} from 'material-ui/Card';
+import {withRouter} from 'react-router-dom';
+
+import { Card, CardActions, CardHeader, CardMedia, CardTitle, CardText } from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
 import AppBar from 'material-ui/AppBar';
 import RaisedButton from 'material-ui/RaisedButton';
@@ -115,10 +117,11 @@ class Search extends React.Component {
 			swapFaves: false
 		}
 		//this.props.location.prefs is the prefs object
-		this.fetchClosestPlaces = this.fetchClosestPlaces.bind(this)
-		this.handleAddressState = this.handleAddressState.bind(this)
-		this.saveFavorite = this.saveFavorite.bind(this)
-		this.swapSeachtoFavorites = this.swapSeachtoFavorites.bind(this)
+		this.fetchClosestPlaces = this.fetchClosestPlaces.bind(this);
+		this.handleAddressState = this.handleAddressState.bind(this);
+		this.saveFavorite = this.saveFavorite.bind(this);
+		this.swapSeachtoFavorites = this.swapSeachtoFavorites.bind(this);
+		this.goToPrefs = this.goToPrefs.bind(this);
 	}
 
 	fetchClosestPlaces(){
@@ -172,8 +175,15 @@ class Search extends React.Component {
 		})
 	}
 
+	goToPrefs() {
+		this.props.history.push({
+			pathname: '/preferences',
+		});
+	}
+
 
 	render() {
+		console.log('history in search bar is', this.props.history)
 		return (
 			<div>
 				<AppBar title="Search the World" iconElementLeft={IconButtonExampleTouch()}>
@@ -216,6 +226,7 @@ class Search extends React.Component {
 					</ToolbarGroup>
         <ToolbarGroup>
           <ToolbarSeparator />
+					<RaisedButton primary={true} onClick={() => this.goToPrefs()}>Edit Preferences</RaisedButton>
 					<RaisedButton primary={true} onClick={() => { this.swapSeachtoFavorites() }}>{this.state.swapFaves ? "Searches" : "Save All"}</RaisedButton>
         </ToolbarGroup>
       </Toolbar>
@@ -272,4 +283,4 @@ class Search extends React.Component {
 		)
 	}
 }
-export default Search;
+export default withRouter(Search);

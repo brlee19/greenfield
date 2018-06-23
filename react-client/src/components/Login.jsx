@@ -78,48 +78,48 @@ class Login extends React.Component{
   render() { 
     console.log(this.props.history)
   	return (
-	<div style={{backgroundColor: teal500, minHeight: `100vh`, display:"flex", flex: 1, justifyContent: "center", alignItems: "center"}}>
+			<div style={{backgroundColor: teal500, minHeight: `100vh`, display:"flex", flex: 1, justifyContent: "center", alignItems: "center"}}>
 
-		<Paper style={{
-			height: `45rem`,
-			width: `22rem`,
-			margin: 20,
-			paddingTop: `5rem`,
-			textAlign: 'center',
-			justifyContent: "center", 
-			alignItems: "center"
-		}} zDepth={4}>
-			<img src={require('../assets/logo.svg')} alt="My logo" />
-			<h5 >At Home, Anywhere.</h5>
-			<br/>
-	    <h4>Please login to TravelHero.</h4>
-			<TextField
-				type="text"
-				name="username"
-				value={this.state.username} 
-				onChange={this.handleUsernameState}
-				hintText="Username"
-				hintStyle={styles.hintStyle}
-				inputStyle={{color: `black`}}
-				underlineStyle={styles.underlineStyle}
-			/>
-			<br />
-			<TextField
-				type="text"
-				name="password"
-				hintText="Password"
-				hintStyle={styles.hintStyle}
-				inputStyle={{color: `black`}}
-				underlineStyle={styles.underlineStyle}
-			/>
-			<br/>
-			<br/>
-			<RaisedButton primary={true} label="LOGIN" onClick={()=> {this.sendUsernameToServer()}}/>
-			<br/>
-			<br/>
-			<FlatButton label="SIGNUP" onClick={this.goToSignup} />
-		</Paper>
-	</div>
+				<Paper style={{
+					height: `45rem`,
+					width: `22rem`,
+					margin: 20,
+					paddingTop: `5rem`,
+					textAlign: 'center',
+					justifyContent: "center", 
+					alignItems: "center"
+				}} zDepth={4}>
+					<img src={require('../assets/logo.svg')} alt="My logo" />
+					<h5 >At Home, Anywhere.</h5>
+					<br/>
+					<h4>Please login to TravelHero.</h4>
+					<TextField
+						type="text"
+						name="username"
+						value={this.state.username} 
+						onChange={this.handleUsernameState}
+						hintText="Username"
+						hintStyle={styles.hintStyle}
+						inputStyle={{color: `black`}}
+						underlineStyle={styles.underlineStyle}
+					/>
+					<br />
+					<TextField
+						type="text"
+						name="password"
+						hintText="Password"
+						hintStyle={styles.hintStyle}
+						inputStyle={{color: `black`}}
+						underlineStyle={styles.underlineStyle}
+					/>
+					<br/>
+					<br/>
+					<RaisedButton primary={true} label="LOGIN" onClick={()=> {this.sendUsernameToServer()}}/>
+					<br/>
+					<br/>
+					<FlatButton label="SIGNUP" onClick={this.goToSignup} />
+				</Paper>
+			</div>
   		)
   	}
 }
