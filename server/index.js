@@ -38,8 +38,7 @@ app.post('/save', (req, res) => {
 
 app.post('/places', (req, res) => {
   const userQuery = req.body.params;
-
-  //format query differently based on whether it came from user or from DB
+  // format query differently based on whether it came from user or from DB
   const formattedQuery = userQuery.newPrefs ? utils.mapReactObj(userQuery.newPrefs) : utils.mapReactObj(userQuery.savedPrefs);
 
   // console.log('get userQuery from front', userQuery);
@@ -98,44 +97,43 @@ app.get('/', function (req, res) {
 
 app.post('/login', async (req, res) => {
   console.log('user trying to login is', req.body.userObj.username);
-  //check DB for user
-    //if user not found, send to signup page
-    //if user found and has no prefs, send back blank array so React sends user to prefs
-    //if user found and has prefs, send back prefs
-  // const prefs = [
-  //   {type: 'bank', query: 'chase'},
-  //   {type: 'supermarket'},
-  //   // {type: 'restaurant', query:'coffee'},
-  //   {type: 'gym', query: 'equinox'}
-  // ];
+  // check DB for user
+    // if user not found, send to signup page
+    // if user found and has no prefs, send back blank array so React sends user to prefs
+    // if user found and has prefs, send back prefs
   try {
     const userPrefs = await getPrefs(req.body.userObj);
     console.log('userPrefs are', userPrefs)
     if (userPrefs && userPrefs.userData) {
-      //need to sync these names across schema and API
+      // need to sync these names across schema and API
       const {bank, grocery_store, coffee_shop, gym_membership, laundromat,
         liquor_store, hair_care, restaurant, convenience_store, public_transit} = userPrefs.userData;
 
       const formattedPrefs = {
-        "bank": bank,
-        "supermarket": grocery_store,
-        "meal_takeaway": restaurant,
-        "cafe": coffee_shop,
-        "gym": gym_membership,
-        "liquor_store": liquor_store,
-        "convenience_store": convenience_store,
-        "laundry": laundromat,
-        "hair_care": hair_care,
-        "transit_station": public_transit
+        'bank': bank,
+        'supermarket': grocery_store,
+        'meal_takeaway': restaurant,
+        'cafe': coffee_shop,
+        'gym': gym_membership,
+        'liquor_store': liquor_store,
+        'convenience_store': convenience_store,
+        'laundry': laundromat,
+        'hair_care': hair_care,
+        'transit_station': public_transit
       };
 
       //can avoid this mutation too once names are synced...should match google API
       userPrefs.userData = formattedPrefs;
       console.log('results userdata in checkuser /login route:', JSON.stringify(userPrefs.userData));
       res.send(JSON.stringify(userPrefs))
-    } else {
-      res.send([]);
     }
+
+    if (userPrefs === 'user does not exist') {
+      res.send('user does not exist');
+    }
+    //user exists but has not set any prefs
+    res.send('user has no prefs');
+
   } catch(e) {
     console.error('error trying to retrieve user prefs', e);
     res.status(500).send('Error trying to retrieve user prefs');

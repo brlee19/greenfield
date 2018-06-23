@@ -31,13 +31,17 @@ class Login extends React.Component{
   // sending name to database
   sendUsernameToServer(){
     // console.log('function reached')
-  	let userObj = {"username": this.state.username, "password": "pwd"}
+		const userObj = {'username': this.state.username, 'password': 'pwd'};
 		axios.post('/login', {"userObj": userObj})
 			.then((response) => {
 				console.log('response is', response)
 				console.log('username sent!')
 				console.log('test prefs are', response.data);
-				if (response.data.length === 0) {
+				if (response.data === 'user does not exist') {
+					this.props.history.push({
+						pathname: '/signup',
+					});
+				} else if (response.data.length === 'user has no prefs') {
 					this.props.history.push({
 						pathname: '/preferences',
 						username: this.state.username

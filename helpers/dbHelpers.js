@@ -1,9 +1,9 @@
-const mysql = require(`mysql`);
+const mysql = require('mysql');
 
 const connection = mysql.createConnection({
   multipleStatements: true,
-  user: `root`,
-  database: `thero`
+  user: 'root',
+  database: 'thero',
 });
 
 connection.connect();
@@ -13,43 +13,16 @@ const dbQuery = (queryStr, args) => {
     connection.query(queryStr, args, (err, rows) => {
       if (err) return reject(err);
       resolve(rows);
-    })
+    });
   });
 };
 
 const createUser = async (user) => {
-  return await dbQuery('insert into users set ?', user);
-};
-
-const getPrefs = async (user) => {
-  try {
-    const userLookup = await dbQuery(`SELECT * FROM users WHERE username = ?`, user.username);
-    const userDoesExist = userLookup.length;
-    if (userDoesExist) {
-      return {
-        userData: userLookup[0], // make sure no dupe usernames allowed
-        places: await getUserSavedData(userLookup[0].id)
-      };
-    } else {
-      await createUser(user);
-      return [];
-    };
-    console.log('done creating user or retrieving user data')
-  } catch(e) {
-    console.error('error trying to check or create user', e)
-  }
-};
-
-const getUserSavedData = async (userId) => {
-  const savedDestinations = await getUserDestinations(userId);
-  const destIds = savedDestinations.map(row => row.id);
-  const savedPlaces = await getUserPlaces(destIds);
-  console.log('saved destinations are', savedDestinations)
-  console.log('saved places are', savedPlaces);
+  return dbQuery('insert into users set ?', user);
 };
 
 const getUserDestinations = async (userId) => {
-  return await dbQuery('select * from saved_destinations where id_users = ?', userId);
+  return dbQuery('select * from saved_destinations where id_users = ?', userId);
 };
 
 const getUserPlaces = async (destinationIds) => {
@@ -60,9 +33,31 @@ const getUserPlaces = async (destinationIds) => {
     on p.google_id = d2p.google_id_saved_places
     where d2p.id_saved_destination in ('${destinationIds.join()}')
   `;
-  return await dbQuery(queryStr);
+  return dbQuery(queryStr);
 };
-        
+
+const getUserSavedData = async (userId) => {
+  const savedDestinations = await getUserDestinations(userId);
+  const destIds = savedDestinations.map(row => row.id);
+  const savedPlaces = await getUserPlaces(destIds);
+};
+
+const getPrefs = async (user) => {
+  try {
+    const userLookup = await dbQuery('SELECT * FROM users WHERE username = ?', user.username);
+    const userDoesExist = userLookup.length;
+    if (userDoesExist) {
+      return {
+        userData: userLookup[0], // make sure no dupe usernames allowed
+        places: await getUserSavedData(userLookup[0].id),
+      };
+    }
+    return 'user does not exist';
+  } catch (e) {
+    console.error('error trying to check or create user', e);
+  }
+};
+
 const savePrefs = (prefs, cb) => {
   console.log(`prefs obj in savePrefs ${JSON.stringify(prefs)}`);
   let prefQuery = `UPDATE users ?`;
